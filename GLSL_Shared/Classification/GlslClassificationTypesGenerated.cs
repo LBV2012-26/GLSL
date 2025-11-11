@@ -10,12 +10,13 @@ namespace DMS.GLSL.Classification
 	{
 		public const string Function = nameof(glslFunction);
 		public const string Keyword = nameof(glslKeyword);
+		public const string ControlKeyword = nameof(glslControlKeyword);
 		public const string Variable = nameof(glslVariable);
 		public const string UserKeyword1 = nameof(glslUserKeyword1);
 		public const string UserKeyword2 = nameof(glslUserKeyword2);
 
 #pragma warning disable 169 //never used warning
-
+		
 		[Export]
 		[Name(Function)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
@@ -25,6 +26,11 @@ namespace DMS.GLSL.Classification
 		[Name(Keyword)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
 		private static readonly ClassificationTypeDefinition glslKeyword;
+
+		[Export]
+		[Name(ControlKeyword)]
+		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
+		private static readonly ClassificationTypeDefinition glslControlKeyword;
 
 		[Export]
 		[Name(Variable)]

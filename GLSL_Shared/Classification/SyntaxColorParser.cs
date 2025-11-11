@@ -33,6 +33,7 @@ namespace DMS.GLSL.Classification
 			UserKeyword1 = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.UserKeyword1);
 			UserKeyword2 = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.UserKeyword2);
 			Variable = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.Variable);
+			ControlKeyword = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.ControlKeyword);
 			parser = new GlslParser();
 			userKeywords.PropertyChanged += (s, a) =>
 			{
@@ -71,6 +72,7 @@ namespace DMS.GLSL.Classification
 		private IClassificationType UserKeyword1 { get; }
 		private IClassificationType UserKeyword2 { get; }
 		private IClassificationType Variable { get; }
+		private IClassificationType ControlKeyword { get; }
 
 		private void ResetUserKeywords(IUserKeywords userKeywords)
 		{
@@ -91,6 +93,7 @@ namespace DMS.GLSL.Classification
 				case TokenType.Comment: return Comment;
 				case TokenType.Function: return CheckUserDefined(token, Function);
 				case TokenType.Keyword: return CheckUserDefined(token, Keyword);
+				case TokenType.ControlKeyword: return CheckUserDefined(token, ControlKeyword);
 				case TokenType.Number: return Number;
 				case TokenType.Operator: return Operator;
 				case TokenType.Preprocessor: return PreprocessorKeyword;

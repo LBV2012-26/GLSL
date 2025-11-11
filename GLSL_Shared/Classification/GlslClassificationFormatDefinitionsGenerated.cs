@@ -17,7 +17,7 @@ namespace DMS.GLSL.Classification
 		public GlslFunctionClassificationFormatDefinition()
 		{
 			DisplayName = "GLSL Function"; //human readable version of the name
-			ForegroundColor = ColorTools.FromHexCode("#ffaf5f");
+			ForegroundColor = ColorTools.FromHexCode("#dcdcaa");
 		}
 	}
 
@@ -34,6 +34,22 @@ namespace DMS.GLSL.Classification
 		{
 			DisplayName = "GLSL Keyword"; //human readable version of the name
 			ForegroundColor = ColorTools.FromHexCode("#5fafff");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.ControlKeyword)]
+	[Name(nameof(GlslControlKeywordClassificationFormatDefinition))]
+	//this should be visible to the end user
+	[UserVisible(true)]
+	//set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslControlKeywordClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslControlKeywordClassificationFormatDefinition()
+		{
+			DisplayName = "GLSL ControlKeyword"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#d8a0df");
 		}
 	}
 

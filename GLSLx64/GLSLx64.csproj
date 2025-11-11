@@ -80,9 +80,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GLSLhelper">
-      <Version>0.3.67</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Composition">
       <Version>17.7.40</Version>
     </PackageReference>
@@ -108,6 +105,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\GLSLhelper\src\GLSLhelper.csproj">
+      <Project>{cb2a0cd1-910c-c128-5ece-145df6921725}</Project>
+      <Name>GLSLhelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Glslang\Glslang.csproj">
       <Project>{def91bf6-e90f-4556-ae03-1ec303a8ba5f}</Project>
       <Name>Glslang</Name>
