@@ -8,45 +8,65 @@ namespace DMS.GLSL.Classification
 
 	internal static class GlslClassificationTypes
 	{
-		public const string Function = nameof(glslFunction);
-		public const string Keyword = nameof(glslKeyword);
-		public const string ControlKeyword = nameof(glslControlKeyword);
-		public const string Variable = nameof(glslVariable);
-		public const string UserKeyword1 = nameof(glslUserKeyword1);
-		public const string UserKeyword2 = nameof(glslUserKeyword2);
-
+	
+		public const string Function = nameof(_glslFunction);
+	
+		public const string Keyword = nameof(_glslKeyword);
+	
+		public const string ControlKeyword = nameof(_glslControlKeyword);
+	
+		public const string BuiltInVariable = nameof(_glslBuiltInVariable);
+	
+		public const string UserVariable = nameof(_glslUserVariable);
+	
+		public const string UserDefinedType = nameof(_glslUserDefinedType);
+	
+		public const string UserKeyword1 = nameof(_glslUserKeyword1);
+	
+		public const string UserKeyword2 = nameof(_glslUserKeyword2);
+	
 #pragma warning disable 169 //never used warning
-		
+	
 		[Export]
 		[Name(Function)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
-		private static readonly ClassificationTypeDefinition glslFunction;
-
+		private static readonly ClassificationTypeDefinition _glslFunction;
+	
 		[Export]
 		[Name(Keyword)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
-		private static readonly ClassificationTypeDefinition glslKeyword;
-
+		private static readonly ClassificationTypeDefinition _glslKeyword;
+	
 		[Export]
 		[Name(ControlKeyword)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
-		private static readonly ClassificationTypeDefinition glslControlKeyword;
-
+		private static readonly ClassificationTypeDefinition _glslControlKeyword;
+	
 		[Export]
-		[Name(Variable)]
+		[Name(BuiltInVariable)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Keyword)]
-		private static readonly ClassificationTypeDefinition glslVariable;
-
+		private static readonly ClassificationTypeDefinition _glslBuiltInVariable;
+	
+		[Export]
+		[Name(UserVariable)]
+		[BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
+		private static readonly ClassificationTypeDefinition _glslUserVariable;
+	
+		[Export]
+		[Name(UserDefinedType)]
+		[BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
+		private static readonly ClassificationTypeDefinition _glslUserDefinedType;
+	
 		[Export]
 		[Name(UserKeyword1)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
-		private static readonly ClassificationTypeDefinition glslUserKeyword1;
-
+		private static readonly ClassificationTypeDefinition _glslUserKeyword1;
+	
 		[Export]
 		[Name(UserKeyword2)]
 		[BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
-		private static readonly ClassificationTypeDefinition glslUserKeyword2;
-
+		private static readonly ClassificationTypeDefinition _glslUserKeyword2;
+	
 #pragma warning restore 169 //never used warning
 	}
 }

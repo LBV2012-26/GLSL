@@ -21,17 +21,17 @@ namespace DMS.GLSL.CodeCompletion
 	internal sealed class VsTextViewCreationListener : IVsTextViewCreationListener
 	{
 		[Import]
-		private readonly IVsEditorAdaptersFactoryService AdaptersFactory = null;
+		private readonly IVsEditorAdaptersFactoryService _adaptersFactory = null;
 
 		[Import]
-		private readonly ICompletionBroker CompletionBroker = null;
+		private readonly ICompletionBroker _completionBroker = null;
 
 		public void VsTextViewCreated(IVsTextView textViewAdapter)
 		{
-			IWpfTextView view = AdaptersFactory.GetWpfTextView(textViewAdapter);
+			IWpfTextView view = _adaptersFactory.GetWpfTextView(textViewAdapter);
 			Debug.Assert(view != null);
 
-			var filter = new CommandFilter(view, CompletionBroker);
+			var filter = new CommandFilter(view, _completionBroker);
 
 			textViewAdapter.AddCommandFilter(filter, out IOleCommandTarget next);
 			filter.Next = next;
@@ -65,21 +65,21 @@ namespace DMS.GLSL.CodeCompletion
 			{
 				switch ((VSConstants.VSStd2KCmdID)prgCmds[0].cmdID)
 				{
-					case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
-					case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-					case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
-					case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
-					case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
-					case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
-						prgCmds[0].cmdf = (uint)OLECMDF.OLECMDF_ENABLED | (uint)OLECMDF.OLECMDF_SUPPORTED;
-						return VSConstants.S_OK;
+				case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
+				case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+				case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
+				case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
+				case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
+				case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
+					prgCmds[0].cmdf = (uint)OLECMDF.OLECMDF_ENABLED | (uint)OLECMDF.OLECMDF_SUPPORTED;
+					return VSConstants.S_OK;
 				}
 			}
 			ThreadHelper.ThrowIfNotOnUIThread();
 			return Next.QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
 		}
 
-		public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+		public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdExecopt, IntPtr pvaIn, IntPtr pvaOut)
 		{
 			bool handled = false;
 			int hresult = VSConstants.S_OK;
@@ -89,52 +89,54 @@ namespace DMS.GLSL.CodeCompletion
 			{
 				switch ((VSConstants.VSStd2KCmdID)nCmdID)
 				{
-					case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
-					case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-						handled = StartSession();
-						break;
-					case VSConstants.VSStd2KCmdID.RETURN:
-						handled = Complete(false);
-						break;
-					case VSConstants.VSStd2KCmdID.TAB:
-						handled = Complete(true);
-						break;
-					case VSConstants.VSStd2KCmdID.CANCEL:
-						Cancel();
-						break;
-					case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
-					case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
-						Comment(TextView);
-						handled = true;
-						break;
-					case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
-					case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
-						UnComment(TextView);
-						handled = true;
-						break;
+				case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
+				case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+					handled = StartSession();
+					break;
+				case VSConstants.VSStd2KCmdID.RETURN:
+					handled = Complete(false);
+					break;
+				case VSConstants.VSStd2KCmdID.TAB:
+					handled = Complete(true);
+					break;
+				case VSConstants.VSStd2KCmdID.CANCEL:
+					Cancel();
+					break;
+				case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
+				case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
+					Comment(TextView);
+					handled = true;
+					break;
+				case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
+				case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
+					UnComment(TextView);
+					handled = true;
+					break;
 				}
 			}
 			ThreadHelper.ThrowIfNotOnUIThread();
-			if (!handled) hresult = Next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-
+			if (!handled)
+			{
+				hresult = Next.Exec(pguidCmdGroup, nCmdID, nCmdExecopt, pvaIn, pvaOut);
+			}
 			if (ErrorHandler.Succeeded(hresult))
 			{
 				if (pguidCmdGroup == VSConstants.VSStd2K)
 				{
 					switch ((VSConstants.VSStd2KCmdID)nCmdID)
 					{
-						case VSConstants.VSStd2KCmdID.TYPECHAR:
-							var c = GetTypeChar(pvaIn);
-							if (!GlslSpecification.IsIdentifierChar(c))
-								Cancel();
-							else if (_currentSession != null)
-								Filter();
-							else if (GlslSpecification.IsIdentifierStartChar(c))
-								StartSession();
-							break;
-						case VSConstants.VSStd2KCmdID.BACKSPACE:
+					case VSConstants.VSStd2KCmdID.TYPECHAR:
+						var c = GetTypeChar(pvaIn);
+						if (!GlslSpecification.IsIdentifierChar(c))
+							Cancel();
+						else if (_currentSession != null)
 							Filter();
-							break;
+						else if (GlslSpecification.IsIdentifierStartChar(c))
+							StartSession();
+						break;
+					case VSConstants.VSStd2KCmdID.BACKSPACE:
+						Filter();
+						break;
 					}
 				}
 			}
@@ -144,11 +146,11 @@ namespace DMS.GLSL.CodeCompletion
 
 		private static void Comment(ITextView textView)
 		{
-			var buffer = textView.TextBuffer;
+			var buffer    = textView.TextBuffer;
 			var selection = textView.Selection;
 			var startLine = selection.Start.Position.GetContainingLine().LineNumber;
-			var endLine = selection.End.Position.GetContainingLine().LineNumber;
-			var edit = buffer.CreateEdit();
+			var endLine   = selection.End.Position.GetContainingLine().LineNumber;
+			var edit      = buffer.CreateEdit();
 			for (int i = startLine; i <= endLine; ++i)
 			{
 				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(i);
@@ -159,17 +161,20 @@ namespace DMS.GLSL.CodeCompletion
 
 		private static void UnComment(ITextView textView)
 		{
-			var buffer = textView.TextBuffer;
+			var buffer    = textView.TextBuffer;
 			var selection = textView.Selection;
 			var startLine = selection.Start.Position.GetContainingLine().LineNumber;
-			var endLine = selection.End.Position.GetContainingLine().LineNumber;
-			var edit = buffer.CreateEdit();
+			var endLine   = selection.End.Position.GetContainingLine().LineNumber;
+			var edit      = buffer.CreateEdit();
 			for (int i = startLine; i <= endLine; ++i)
 			{
-				var line = buffer.CurrentSnapshot.GetLineFromLineNumber(i);
-				var text = line.GetText();
+				var line  = buffer.CurrentSnapshot.GetLineFromLineNumber(i);
+				var text  = line.GetText();
 				var index = text.IndexOf("//");
-				if (-1 != index) edit.Delete(line.Start + index, 2);
+				if (-1 != index)
+				{
+					edit.Delete(line.Start + index, 2);
+				}
 			}
 			edit.Apply();
 		}
@@ -192,10 +197,7 @@ namespace DMS.GLSL.CodeCompletion
 		private void Cancel()
 		{
 			if (null != _currentSession)
-			{
 				_currentSession.Dismiss();
-			}
-
 		}
 
 		/// <summary>
@@ -223,20 +225,24 @@ namespace DMS.GLSL.CodeCompletion
 		/// </summary>
 		private bool StartSession()
 		{
-			if (_currentSession != null) return false;
+			if (_currentSession != null)
+				return false;
 
-			SnapshotPoint caret = TextView.Caret.Position.BufferPosition;
+			SnapshotPoint caret    = TextView.Caret.Position.BufferPosition;
 			ITextSnapshot snapshot = caret.Snapshot;
 
 			if (!Broker.IsCompletionActive(TextView))
 			{
-				_currentSession = Broker.CreateCompletionSession(TextView, snapshot.CreateTrackingPoint(caret, PointTrackingMode.Positive), true);
+				_currentSession = Broker.CreateCompletionSession(
+					TextView, snapshot.CreateTrackingPoint(caret, PointTrackingMode.Positive), true);
 			}
 			else
 			{
 				_currentSession = Broker.GetSessions(TextView)[0];
 			}
-			if (_currentSession is null) return false;
+
+			if (_currentSession is null)
+				return false;
 
 			_currentSession.Dismissed += (sender, args) => _currentSession = null;
 			_currentSession.Start();

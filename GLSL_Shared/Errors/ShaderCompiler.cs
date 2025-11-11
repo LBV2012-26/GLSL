@@ -17,78 +17,79 @@ namespace DMS.GLSL.Errors
 	[PartCreationPolicy(CreationPolicy.Shared)] //default singleton behavior
 	internal class ShaderCompiler
 	{
+		private Task _taskGL;
+		private readonly BlockingCollection<CompileData> _compileRequests = new BlockingCollection<CompileData>();
+		private readonly ICompilerSettings _settings;
+		private readonly ILogger _logger;
+
 		[ImportingConstructor]
 		public ShaderCompiler(ICompilerSettings settings, ILogger logger)
 		{
-			this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-			this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		internal delegate void OnCompilationFinished(IEnumerable<GLSLhelper.ShaderLogLine> errorLog);
 
-		internal void RequestCompile(string shaderCode, string sShaderType, OnCompilationFinished compilationFinishedHandler, string documentDir, string documentName)
+		internal void RequestCompile(string shaderCode, string shaderType, OnCompilationFinished compilationFinishedHandler, string documentDir, string documentName)
 		{
 			StartGlThreadOnce();
-			while (compileRequests.TryTake(out _)) ; //remove pending compiles
-			var data = new CompileData(shaderCode, sShaderType, compilationFinishedHandler, documentDir, documentName);
-			compileRequests.TryAdd(data); //put compile on request list
+			while (_compileRequests.TryTake(out _)) ; //remove pending compiles
+			var data = new CompileData(shaderCode, shaderType, compilationFinishedHandler, documentDir, documentName);
+			_compileRequests.TryAdd(data); //put compile on request list
 		}
 
 		private readonly struct CompileData
 		{
-			public CompileData(string shaderCode, string shaderType, OnCompilationFinished compilationFinished, string documentDir, string documentName)
-			{
-				ShaderCode = shaderCode;
-				ShaderType = shaderType;
-				CompilationFinished = compilationFinished;
-				DocumentDir = documentDir;
-				DocumentName = documentName;
-			}
-
 			public string ShaderCode { get; }
 			public string ShaderType { get; }
 			public OnCompilationFinished CompilationFinished { get; }
 			public string DocumentDir { get; }
 			public string DocumentName { get; }
+
+			public CompileData(string shaderCode, string shaderType, OnCompilationFinished compilationFinished, string documentDir, string documentName)
+			{
+				ShaderCode          = shaderCode;
+				ShaderType          = shaderType;
+				CompilationFinished = compilationFinished;
+				DocumentDir         = documentDir;
+				DocumentName        = documentName;
+			}
 		}
 
 		private static readonly IReadOnlyDictionary<string, ShaderType> mappingContentTypeToShaderType = new Dictionary<string, ShaderType>()
 		{
-			[ShaderContentTypes.Fragment] = ShaderType.FragmentShader,
-			[ShaderContentTypes.Vertex] = ShaderType.VertexShader,
-			[ShaderContentTypes.Geometry] = ShaderType.GeometryShader,
-			[ShaderContentTypes.TessellationControl] = ShaderType.TessControlShader,
+			[ShaderContentTypes.Fragment]               = ShaderType.FragmentShader,
+			[ShaderContentTypes.Vertex]                 = ShaderType.VertexShader,
+			[ShaderContentTypes.Geometry]               = ShaderType.GeometryShader,
+			[ShaderContentTypes.TessellationControl]    = ShaderType.TessControlShader,
 			[ShaderContentTypes.TessellationEvaluation] = ShaderType.TessEvaluationShader,
-			[ShaderContentTypes.Compute] = ShaderType.ComputeShader,
+			[ShaderContentTypes.Compute]                = ShaderType.ComputeShader,
 		};
-
-		private Task taskGL;
-		private readonly BlockingCollection<CompileData> compileRequests = new BlockingCollection<CompileData>();
-		private readonly ICompilerSettings settings;
-		private readonly ILogger logger;
 
 		private void StartGlThreadOnce()
 		{
-			if (!(taskGL is null)) return;
+			if (!(_taskGL is null)) return;
 			//start up GL task for doing shader compilations in background
 			void TaskGlAction()
 			{
 				//create a game window for rendering context, until run is called it is invisible so no problem
 				var context = new GameWindow(1, 1);
-				while (!compileRequests.IsAddingCompleted)
+				while (!_compileRequests.IsAddingCompleted)
 				{
-					var compileData = compileRequests.Take(); //block until compile requested
-					var expandedCode = ExpandedCode(compileData.ShaderCode, compileData.DocumentDir, settings);
-					var log = Compile(expandedCode, compileData.ShaderType, compileData.DocumentDir, compileData.DocumentName, logger, settings);
+					var compileData  = _compileRequests.Take(); //block until compile requested
+					var expandedCode = ExpandedCode(compileData.ShaderCode, compileData.DocumentDir, _settings);
+					var log = Compile(expandedCode, compileData.ShaderType, compileData.DocumentDir, compileData.DocumentName, _logger, _settings);
 					var errorLog = new GLSLhelper.ShaderLogParser(log);
-					if (!string.IsNullOrWhiteSpace(log) && settings.PrintShaderCompilerLog)
+					if (!string.IsNullOrWhiteSpace(log) && _settings.PrintShaderCompilerLog)
 					{
-						logger.Log($"Dumping shader log:\n{log}\n", false);
+						_logger.Log($"Dumping shader log:\n{log}\n", false);
 					}
 					compileData.CompilationFinished?.Invoke(errorLog.Lines);
 				}
 			}
-			taskGL = Task.Factory.StartNew(TaskGlAction, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+
+			_taskGL = Task.Factory.StartNew(TaskGlAction, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
 		}
 
 		private static string AutoDetectShaderContentType(string shaderCode)
@@ -96,12 +97,18 @@ namespace DMS.GLSL.Errors
 			var type = GLSLhelper.ShaderTypeDetector.AutoDetectFromCode(shaderCode);
 			switch (type)
 			{
-				case GLSLhelper.ShaderType.Geometry: return ShaderContentTypes.Geometry;
-				case GLSLhelper.ShaderType.Compute: return ShaderContentTypes.Compute;
-				case GLSLhelper.ShaderType.TessellationControl: return ShaderContentTypes.TessellationControl;
-				case GLSLhelper.ShaderType.TessellationEvaluation: return ShaderContentTypes.TessellationEvaluation;
-				case GLSLhelper.ShaderType.Vertex: return ShaderContentTypes.Vertex;
-				default: return ShaderContentTypes.Fragment;
+			case GLSLhelper.ShaderType.Geometry:
+				return ShaderContentTypes.Geometry;
+			case GLSLhelper.ShaderType.Compute:
+				return ShaderContentTypes.Compute;
+			case GLSLhelper.ShaderType.TessellationControl:
+				return ShaderContentTypes.TessellationControl;
+			case GLSLhelper.ShaderType.TessellationEvaluation:
+				return ShaderContentTypes.TessellationEvaluation;
+			case GLSLhelper.ShaderType.Vertex:
+				return ShaderContentTypes.Vertex;
+			default:
+				return ShaderContentTypes.Fragment;
 			}
 		}
 
@@ -123,6 +130,7 @@ namespace DMS.GLSL.Errors
 						lines[i] = lines[i].Substring(index + specialComment.Length); // remove everything before special comment
 					}
 				}
+
 				return string.Join("\n", lines);
 			}
 
@@ -142,6 +150,7 @@ namespace DMS.GLSL.Errors
 
 					return ExpandedCode(includeCode, Path.GetDirectoryName(includeFileName), settings, includedFiles: includedFiles);
 				}
+
 				return $"#error include file '{includeName}' not found";
 			}
 
@@ -180,7 +189,7 @@ namespace DMS.GLSL.Errors
 		private static string CompileExternal(string shaderCode, string shaderContentType, string documentDir, string documentName, ILogger logger, ICompilerSettings settings)
 		{
 			//create temp shader file for external compiler
-			var tempPath = Path.GetTempPath();
+			var tempPath       = Path.GetTempPath();
 			var shaderFileName = Path.Combine(tempPath, $"shader{ShaderContentTypes.DefaultFileExtension(shaderContentType)}");
 			try
 			{
@@ -190,18 +199,21 @@ namespace DMS.GLSL.Errors
 					process.StartInfo.FileName = VsExpand.EnvironmentVariables(settings.ExternalCompilerExeFilePath);
 					var arguments = VsExpand.EnvironmentVariables(settings.ExternalCompilerArguments, documentDir, documentName);
 					logger.Log($"Using external compiler '{settings.ExternalCompilerExeFilePath}' with arguments '{arguments}' on temporal shader file '{shaderFileName}'", true);
-					process.StartInfo.Arguments = $"{arguments} \"{shaderFileName}\""; //arguments
-					process.StartInfo.WorkingDirectory = tempPath;
-					process.StartInfo.UseShellExecute = false;
+					
+					process.StartInfo.Arguments              = $"{arguments} \"{shaderFileName}\""; //arguments
+					process.StartInfo.WorkingDirectory       = tempPath;
+					process.StartInfo.UseShellExecute        = false;
 					process.StartInfo.RedirectStandardOutput = true;
-					process.StartInfo.RedirectStandardError = true;
-					process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-					process.StartInfo.CreateNoWindow = true; //do not display a windows
+					process.StartInfo.RedirectStandardError  = true;
+					process.StartInfo.WindowStyle            = ProcessWindowStyle.Hidden;
+					process.StartInfo.CreateNoWindow         = true; //do not display a windows
 					process.Start();
+					
 					if (!process.WaitForExit(10000))
 					{
 						logger.Log("External compiler did take more than 10 seconds to finish. Aborting!", true);
 					}
+					
 					return process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd(); //The output result
 				}
 			}

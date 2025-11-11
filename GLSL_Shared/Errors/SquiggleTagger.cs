@@ -11,13 +11,16 @@ namespace DMS.GLSL.Errors
 	internal class SquiggleTagger : ITagger<IErrorTag>
 	{
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
+		private readonly List<ITagSpan<IErrorTag>> _tags = new List<ITagSpan<IErrorTag>>();
+		private readonly ITextBuffer _buffer;
+		private readonly string _filePath;
 
 		internal SquiggleTagger(ITextBuffer buffer)
 		{
-			this.buffer = buffer;
+			_buffer = buffer;
 			if (buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument document))
 			{
-				filePath = document.FilePath;
+				_filePath = document.FilePath;
 			}
 		}
 
@@ -31,27 +34,26 @@ namespace DMS.GLSL.Errors
 			foreach (var error in errorLog)
 			{
 				var lineNumber = error.LineNumber.HasValue ? error.LineNumber.Value - 1 : 0;
-				ErrorList.GetInstance().Write(error.Message, lineNumber, filePath, error.Type);
+				ErrorList.GetInstance().Write(error.Message, lineNumber, _filePath, error.Type);
 
-				var lineSpan = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Extent; //TODO: parse error.message for offending words to trim down span
+				var lineSpan = _buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber).Extent; //TODO: parse error.message for offending words to trim down span
 				var tag = new ErrorTag(ConvertErrorType(error.Type), error.Message);
 				_tags.Add(new TagSpan<IErrorTag>(lineSpan, tag));
 			}
-			var span = new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length);
+			var span = new SnapshotSpan(_buffer.CurrentSnapshot, 0, _buffer.CurrentSnapshot.Length);
 			TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(span));
 		}
-
-		private readonly List<ITagSpan<IErrorTag>> _tags = new List<ITagSpan<IErrorTag>>();
-		private readonly ITextBuffer buffer;
-		private readonly string filePath;
 
 		private static string ConvertErrorType(MessageType type)
 		{
 			switch (type)
 			{
-				case MessageType.Error: return PredefinedErrorTypeNames.SyntaxError;
-				case MessageType.Warning: return PredefinedErrorTypeNames.Warning;
-				default: return PredefinedErrorTypeNames.Suggestion;
+			case MessageType.Error:
+				return PredefinedErrorTypeNames.SyntaxError;
+			case MessageType.Warning:
+				return PredefinedErrorTypeNames.Warning;
+			default:
+				return PredefinedErrorTypeNames.Suggestion;
 			}
 		}
 	}

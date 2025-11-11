@@ -36,15 +36,13 @@ namespace DMS.GLSL.Classification
 
 			void UpdateSpans()
 			{
+				var snapshotSpan = new SnapshotSpan(textBuffer.CurrentSnapshot, 0, textBuffer.CurrentSnapshot.Length);
+				var spans        = parser.CalculateSpans(snapshotSpan);
 #if DEBUG
 				var time = Stopwatch.StartNew();
-#endif
-				var snapshotSpan = new SnapshotSpan(textBuffer.CurrentSnapshot, 0, textBuffer.CurrentSnapshot.Length);
-				var spans = parser.CalculateSpans(snapshotSpan);
-#if DEBUG
 				logger.Log($"{time.ElapsedTicks * 1e3f / Stopwatch.Frequency}ms : tokens={spans.Count}");
 #endif
-				this.spans = spans;
+				_spans = spans;
 				ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(snapshotSpan));
 			}
 
@@ -75,8 +73,12 @@ namespace DMS.GLSL.Classification
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan inputSpan)
 		{
 			var output = new List<ClassificationSpan>();
-			var currentSpans = spans; // if UpdateSpans runs during execution we want to avoid any exceptions
-			if (0 == currentSpans.Count) return output;
+			var currentSpans = _spans; // if UpdateSpans runs during execution we want to avoid any exceptions
+			if (0 == currentSpans.Count)
+			{
+				return output;
+			}
+
 			var translatedInput = inputSpan.TranslateTo(currentSpans[0].Span.Snapshot, SpanTrackingMode.EdgeInclusive);
 
 			foreach (var span in currentSpans)
@@ -89,6 +91,6 @@ namespace DMS.GLSL.Classification
 			return output;
 		}
 
-		private IList<ClassificationSpan> spans = new List<ClassificationSpan>();
+		private IList<ClassificationSpan> _spans = new List<ClassificationSpan>();
 	}
 }

@@ -7,14 +7,17 @@ namespace DMS.GLSL.Errors
 {
 	public sealed class ErrorList : IServiceProvider
 	{
+		private static readonly ErrorList _instance = new ErrorList();
+		private readonly ErrorListProvider _provider;
+
 		private ErrorList()
 		{
-			provider = new ErrorListProvider(this);
+			_provider = new ErrorListProvider(this);
 		}
 
 		public static ErrorList GetInstance()
 		{
-			return instance;
+			return _instance;
 		}
 
 		public object GetService(Type serviceType)
@@ -24,7 +27,7 @@ namespace DMS.GLSL.Errors
 
 		public void Clear()
 		{
-			provider.Tasks.Clear();
+			_provider.Tasks.Clear();
 		}
 
 		internal void Write(string message, int lineNumber, string filePath, MessageType type)
@@ -33,22 +36,23 @@ namespace DMS.GLSL.Errors
 			task.Navigate += Task_Navigate;
 			try
 			{
-				provider.Tasks.Add(task);
-				//provider.BringToFront();
+				_provider.Tasks.Add(task);
+				// provider.BringToFront();
 			}
 			catch (OperationCanceledException)
-			{ }
+			{
+			}
 		}
 
 		private static ErrorTask CreateTask(string text, int line, string document, TaskErrorCategory errorCategory)
 		{
 			return new ErrorTask
 			{
-				Category = TaskCategory.BuildCompile,
-				Text = text,
-				Line = line,
-				Column = 1,
-				Document = document,
+				Category      = TaskCategory.BuildCompile,
+				Text          = text,
+				Line          = line,
+				Column        = 1,
+				Document      = document,
 				ErrorCategory = errorCategory,
 			};
 		}
@@ -58,20 +62,17 @@ namespace DMS.GLSL.Errors
 			if (sender is ErrorTask task)
 			{
 				var temp = CreateTask(task.Text, task.Line + 1, task.Document, task.ErrorCategory);
-				provider.Navigate(temp, new Guid(LogicalViewID.Code));
+				_provider.Navigate(temp, new Guid(LogicalViewID.Code));
 			}
 		}
-
-		private static readonly ErrorList instance = new ErrorList();
-		private readonly ErrorListProvider provider;
 
 		private static TaskErrorCategory Convert(MessageType type)
 		{
 			switch (type)
 			{
-				case MessageType.Error: return TaskErrorCategory.Error;
-				case MessageType.Warning: return TaskErrorCategory.Warning;
-				default: return TaskErrorCategory.Message;
+			case MessageType.Error:   return TaskErrorCategory.Error;
+			case MessageType.Warning: return TaskErrorCategory.Warning;
+			default:                  return TaskErrorCategory.Message;
 			}
 		}
 	}

@@ -17,6 +17,10 @@ namespace DMS.GLSL.CodeCompletion
 	[Name("glslCompletion")]
 	internal class GlslCompletionSourceProvider : ICompletionSourceProvider
 	{
+		private readonly IClassifierAggregatorService _classifierAggregatorService;
+		private readonly ImageSource _identifier;
+		private readonly List<Completion> _staticCompletions = new List<Completion>();
+
 		[ImportingConstructor]
 		public GlslCompletionSourceProvider(IClassifierAggregatorService classifierAggregatorService, IGlyphService glyphService)
 		{
@@ -25,25 +29,25 @@ namespace DMS.GLSL.CodeCompletion
 				throw new ArgumentNullException(nameof(glyphService));
 			}
 
-			this.classifierAggregatorService = classifierAggregatorService ?? throw new ArgumentNullException(nameof(classifierAggregatorService));
-			identifier = glyphService.GetGlyph(StandardGlyphGroup.GlyphGroupVariable, StandardGlyphItem.GlyphItemFriend);
+			_classifierAggregatorService = classifierAggregatorService ?? throw new ArgumentNullException(nameof(classifierAggregatorService));
+			_identifier = glyphService.GetGlyph(StandardGlyphGroup.GlyphGroupVariable, StandardGlyphItem.GlyphItemFriend);
 
-			var keyword = glyphService.GetGlyph(StandardGlyphGroup.GlyphKeyword, StandardGlyphItem.GlyphItemPublic);
+			var keyword  = glyphService.GetGlyph(StandardGlyphGroup.GlyphKeyword, StandardGlyphItem.GlyphItemPublic);
 			var function = glyphService.GetGlyph(StandardGlyphGroup.GlyphGroupMethod, StandardGlyphItem.GlyphItemPublic);
 			var variable = glyphService.GetGlyph(StandardGlyphGroup.GlyphGroupVariable, StandardGlyphItem.GlyphItemPublic);
 			ImageSource ConvertReservedType(TokenType type)
 			{
 				switch (type)
 				{
-					case TokenType.Keyword: return keyword;
-					case TokenType.Function: return function;
-					case TokenType.Variable: return variable;
-					default: return identifier;
+				case TokenType.Keyword:         return keyword;
+				case TokenType.Function:        return function;
+				case TokenType.BuiltInVariable: return variable;
+				default:                        return _identifier;
 				}
 			}
 			foreach (var var in GlslSpecification.ReservedWords)
 			{
-				staticCompletions.Add(GlslCompletionSource.NewCompletion(var.Key, ConvertReservedType(var.Value)));
+				_staticCompletions.Add(GlslCompletionSource.NewCompletion(var.Key, ConvertReservedType(var.Value)));
 			}
 			//ImageSource ConvertUser(UserKeyWords.DefinedWordType type)
 			//{
@@ -58,35 +62,31 @@ namespace DMS.GLSL.CodeCompletion
 			//{
 			//	staticCompletions.Add(GlslCompletionSource.NewCompletion(var.Key, ConvertUser(var.Value)));
 			//}
-			staticCompletions.Sort((a, b) => a.DisplayText.CompareTo(b.DisplayText));
+			_staticCompletions.Sort((a, b) => a.DisplayText.CompareTo(b.DisplayText));
 		}
 
 		public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
 		{
-			var classifier = classifierAggregatorService.GetClassifier(textBuffer);
-			return new GlslCompletionSource(textBuffer, staticCompletions, identifier, classifier);
+			var classifier = _classifierAggregatorService.GetClassifier(textBuffer);
+			return new GlslCompletionSource(textBuffer, _staticCompletions, _identifier, classifier);
 		}
-
-		private readonly IClassifierAggregatorService classifierAggregatorService;
-		private readonly ImageSource identifier;
-		private readonly List<Completion> staticCompletions = new List<Completion>();
 	}
 
 	internal class GlslCompletionSource : ICompletionSource
 	{
-		private readonly ITextBuffer currentBuffer;
+		private readonly ITextBuffer _currentBuffer;
 		private bool _disposed = false;
-		private readonly IEnumerable<Completion> staticCompletions;
-		private readonly Func<SnapshotSpan, IEnumerable<string>> queryIdentifiers;
-		private readonly ImageSource imgIdentifier;
+		private readonly IEnumerable<Completion> _staticCompletions;
+		private readonly Func<SnapshotSpan, IEnumerable<string>> _queryIdentifiers;
+		private readonly ImageSource _imgIdentifier;
 
 		public GlslCompletionSource(ITextBuffer buffer, IEnumerable<Completion> staticCompletions, ImageSource identifier, IClassifier classifier)
 		{
-			currentBuffer = buffer;
-			this.staticCompletions = staticCompletions;
-			imgIdentifier = identifier;
+			_currentBuffer = buffer;
+			_staticCompletions = staticCompletions;
+			_imgIdentifier = identifier;
 
-			queryIdentifiers = (snapshotSpan) =>
+			_queryIdentifiers = (snapshotSpan) =>
 			{
 				var tokens = classifier.GetClassificationSpans(snapshotSpan);
 				//only those tokens that are identifiers and do not overlap the input position because we do not want to add char that started session to completions
@@ -104,20 +104,20 @@ namespace DMS.GLSL.CodeCompletion
 		{
 			if (_disposed) throw new ObjectDisposedException(nameof(GlslCompletionSource));
 
-			var snapshot = currentBuffer.CurrentSnapshot;
+			var snapshot     = _currentBuffer.CurrentSnapshot;
 			var triggerPoint = (SnapshotPoint)session.GetTriggerPoint(snapshot);
 
 			if (triggerPoint == default) return;
 
-			var completions = new List<Completion>();
+			var completions     = new List<Completion>();
 			var startToPosition = new Span(0, triggerPoint.Position);
-			foreach (var identifier in queryIdentifiers.Invoke(new SnapshotSpan(snapshot, startToPosition)))
+			foreach (var identifier in _queryIdentifiers.Invoke(new SnapshotSpan(snapshot, startToPosition)))
 			{
-				completions.Add(NewCompletion(identifier, imgIdentifier));
+				completions.Add(NewCompletion(identifier, _imgIdentifier));
 			}
-			completions.AddRange(staticCompletions);
+			completions.AddRange(_staticCompletions);
 
-			var start = NonIdentifierPositionBefore(triggerPoint);
+			var start        = NonIdentifierPositionBefore(triggerPoint);
 			var applicableTo = snapshot.CreateTrackingSpan(new SnapshotSpan(start, triggerPoint), SpanTrackingMode.EdgeInclusive);
 			completionSets.Add(new CompletionSet("All", "All", applicableTo, completions, Enumerable.Empty<Completion>()));
 		}

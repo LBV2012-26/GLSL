@@ -13,10 +13,10 @@ namespace DMS.GLSL.Classification
 		/// <returns></returns>
 		public static Color FromHexCode(string hexColor)
 		{
-			var sysColor = (System.Drawing.Color)converter.ConvertFromString(hexColor);
+			var sysColor = (System.Drawing.Color)_converter.ConvertFromString(hexColor);
 			return Color.FromArgb(sysColor.A, sysColor.R, sysColor.G, sysColor.B);
 		}
 
-		private static readonly System.Drawing.ColorConverter converter = new System.Drawing.ColorConverter();
+		private static readonly System.Drawing.ColorConverter _converter = new System.Drawing.ColorConverter();
 	}
 }

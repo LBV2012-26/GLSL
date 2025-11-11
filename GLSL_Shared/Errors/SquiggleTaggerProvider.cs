@@ -56,7 +56,7 @@ namespace DMS.GLSL.Errors
 							var name = Path.GetFileName(filePath);
 							shaderCompiler.RequestCompile(shaderCode, shaderType, tagger.UpdateErrors, dir, name);
 						}
-						catch(SystemException ex)
+						catch (SystemException ex)
 						{
 							logger.Log(ex.Message);
 						}

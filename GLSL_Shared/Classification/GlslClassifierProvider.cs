@@ -25,16 +25,17 @@ namespace DMS.GLSL.Classification
 				throw new System.ArgumentNullException(nameof(userKeywords));
 			}
 
-			this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
-			parser = new SyntaxColorParser(classificationTypeRegistry, userKeywords);
+			_logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+			_parser = new SyntaxColorParser(classificationTypeRegistry, userKeywords);
 		}
 
 		public IClassifier GetClassifier(ITextBuffer textBuffer)
 		{
-			return textBuffer.Properties.GetOrCreateSingletonProperty(() => new GlslClassifier(textBuffer, parser, logger)); //per buffer classifier
+			// per buffer classifier
+			return textBuffer.Properties.GetOrCreateSingletonProperty(() => new GlslClassifier(textBuffer, _parser, _logger));
 		}
 
-		private readonly ILogger logger;
-		private readonly SyntaxColorParser parser;
+		private readonly ILogger _logger;
+		private readonly SyntaxColorParser _parser;
 	}
 }

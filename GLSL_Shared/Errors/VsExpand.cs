@@ -8,6 +8,8 @@ namespace DMS.GLSL.Errors
 {
 	public static class VsExpand
 	{
+		private static readonly object _syncRoot = new object();
+
 		public static async Task<string> EnvironmentVariablesAsync(string text)
 		{
 			const string solutionDirVar = "$(SolutionDir)";
@@ -18,7 +20,10 @@ namespace DMS.GLSL.Errors
 				lock (_syncRoot)
 				{
 					var dTE = Package.GetGlobalService(typeof(DTE)) as DTE;
-					string solutiondir = File.Exists(dTE.Solution.FileName) ? Path.GetDirectoryName(dTE.Solution.FileName) : string.Empty; // the value of $(SolutionDir)
+					string solutiondir = File.Exists(dTE.Solution.FileName)
+									   ? Path.GetDirectoryName(dTE.Solution.FileName)
+									   : string.Empty; // the value of $(SolutionDir)
+
 					text = text.Replace(solutionDirVar, solutiondir);
 					//todo: use dTE.Events.SolutionEvents.Opened
 				}
@@ -36,10 +41,10 @@ namespace DMS.GLSL.Errors
 		{
 			var joinableTaskFactory = ThreadHelper.JoinableTaskFactory;
 			text = text.Replace("%shaderDir%", fileDir)
-				.Replace("%shaderName%", Path.GetFileNameWithoutExtension(fileName))
-				.Replace("%shaderExt%", Path.GetExtension(fileName));
+					   .Replace("%shaderName%", Path.GetFileNameWithoutExtension(fileName))
+					   .Replace("%shaderExt%", Path.GetExtension(fileName));
+
 			return joinableTaskFactory.Run(() => EnvironmentVariablesAsync(text));
 		}
-		private static readonly object _syncRoot = new object();
 	}
 }
