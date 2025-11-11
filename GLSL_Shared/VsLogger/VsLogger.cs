@@ -10,22 +10,22 @@ namespace DMS.GLSL.VsLogger
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class VsLogger : ILogger
 	{
-		private readonly string logFileName;
+		private readonly string _logFileName;
 		private static readonly object _lock = new object();
 
-		public string LoggerInfo => $"Writing logger output to {logFileName}.";
+		public string LoggerInfo => $"Writing logger output to {_logFileName}.";
 
 		public VsLogger()
 		{
-			logFileName = Path.Combine(Path.GetTempPath(), "GLSL VSX language extension.log");
-			Log($"Logging to {logFileName}.");
+			_logFileName = Path.Combine(Path.GetTempPath(), "GLSL VSX language extension.log");
+			Log($"Logging to {_logFileName}.");
 		}
 
 		public async Task LogAsync(string message, bool highPriority = false)
 		{
 			lock (_lock)
 			{
-				File.AppendAllText(logFileName, $"[{DateTime.Now:MM.d HH:mm:ss.fff}] {message} \n");
+				File.AppendAllText(_logFileName, $"[{DateTime.Now:MM.d HH:mm:ss.fff}] {message} \n");
 			}
 			await VsOutput.WindowPaneAsync(message + '\n').ConfigureAwait(false);
 			if (highPriority)
@@ -38,7 +38,7 @@ namespace DMS.GLSL.VsLogger
 		{
 			lock (_lock)
 			{
-				File.AppendAllText(logFileName, $"[{DateTime.Now:MM.d HH:mm:ss.fff}] {message} \n");
+				File.AppendAllText(_logFileName, $"[{DateTime.Now:MM.d HH:mm:ss.fff}] {message} \n");
 			}
 			VsOutput.WindowPane(message + '\n');
 			if (highPriority)

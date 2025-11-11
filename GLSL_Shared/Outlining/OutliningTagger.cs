@@ -21,7 +21,7 @@ namespace DMS.GLSL.Outlining
 			{
 				var snapshot = textBuffer.CurrentSnapshot;
 				var snapshotSpan = new SnapshotSpan(snapshot, 0, snapshot.Length);
-				regionSpans = CalculateRegionSpans(classifier, snapshotSpan, logger);
+				_regionSpans = CalculateRegionSpans(classifier, snapshotSpan, logger);
 				TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(snapshotSpan));
 			}
 
@@ -35,7 +35,7 @@ namespace DMS.GLSL.Outlining
 		public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
 		{
 			if (0 == spans.Count) yield break;
-			var currentRegionSpans = regionSpans;
+			var currentRegionSpans = _regionSpans;
 			if (0 == currentRegionSpans.Count) yield break;
 			//SnapshotSpan entire = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End).TranslateTo(currentRegionSpans[0].Snapshot, SpanTrackingMode.EdgeInclusive);
 
@@ -43,15 +43,15 @@ namespace DMS.GLSL.Outlining
 			{
 				//if (entire.OverlapsWith(region)) // this makes problems when I scroll collapsed regions outside the window and back
 				{
-					yield return new TagSpan<IOutliningRegionTag>(region, new OutliningRegionTag(false, false, ellipsis, region.GetText()));
+					yield return new TagSpan<IOutliningRegionTag>(region, new OutliningRegionTag(false, false, _ellipsis, region.GetText()));
 				}
 			}
 		}
 
-		private const char startHide = '{';     //the characters that start the outlining region
-		private const char endHide = '}';       //the characters that end the outlining region
-		private const string ellipsis = "...";    //the characters that are displayed when the region is collapsed
-		private IList<SnapshotSpan> regionSpans = new List<SnapshotSpan>();
+		private const char _startHide = '{';     //the characters that start the outlining region
+		private const char _endHide = '}';       //the characters that end the outlining region
+		private const string _ellipsis = "...";    //the characters that are displayed when the region is collapsed
+		private IList<SnapshotSpan> _regionSpans = new List<SnapshotSpan>();
 
 		private static IList<SnapshotSpan> CalculateRegionSpans(IClassifier classifier, SnapshotSpan snapshotSpan, ILogger logger)
 		{
@@ -70,15 +70,15 @@ namespace DMS.GLSL.Outlining
 					var text = classificationSpan.Span.GetText();
 					for (int i = 0; i < text.Length; ++i)
 					{
-						if (startHide == text[i])
+						if (_startHide == text[i])
 						{
 							points.Push(classificationSpan.Span.Start);
 						}
-						else if (endHide == text[i])
+						else if (_endHide == text[i])
 						{
 							if (0 == points.Count) continue;
 							var start = points.Pop();
-							var end = classificationSpan.Span.Start + i;
+							var end   = classificationSpan.Span.Start + i;
 							if (start.GetContainingLine().LineNumber != end.GetContainingLine().LineNumber)
 							{
 								var span = new SnapshotSpan(start, end + 1);
@@ -88,6 +88,7 @@ namespace DMS.GLSL.Outlining
 					}
 				}
 			}
+
 			return output;
 		}
 	}

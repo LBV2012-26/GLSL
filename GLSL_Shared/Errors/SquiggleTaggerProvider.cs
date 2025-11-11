@@ -20,9 +20,9 @@ namespace DMS.GLSL.Errors
 		[ImportingConstructor]
 		public SquiggleTaggerProvider(ShaderCompiler shaderCompiler, ICompilerSettings settings, ILogger logger)
 		{
-			this.shaderCompiler = shaderCompiler ?? throw new ArgumentNullException(nameof(shaderCompiler));
-			this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-			this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_shaderCompiler = shaderCompiler ?? throw new ArgumentNullException(nameof(shaderCompiler));
+			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
@@ -36,9 +36,7 @@ namespace DMS.GLSL.Errors
 			return buffer.Properties.GetOrCreateSingletonProperty(() =>
 			{
 				var tagger = new SquiggleTagger(buffer);
-
 				var shaderType = buffer.ContentType.TypeName;
-
 				var observableSourceCode = Observable.Return(buffer.CurrentSnapshot.GetText()).Concat(
 						Observable.FromEventPattern<TextContentChangedEventArgs>(h => buffer.Changed += h, h => buffer.Changed -= h)
 						.Select(e => e.EventArgs.After.GetText()));
@@ -46,19 +44,21 @@ namespace DMS.GLSL.Errors
 				void RequestCompileShader(string shaderCode)
 				{
 					//if not currently compiling then compile shader from changed text otherwise add to the "to be compiled" list
-					if (settings.LiveCompiling)
+					if (_settings.LiveCompiling)
 					{
 						var filePath = GetFilePath(buffer);
 						try
 						{
-							if (!File.Exists(filePath)) return;
-							var dir = Path.GetDirectoryName(filePath);
+							if (!File.Exists(filePath))
+								return;
+							
+							var dir  = Path.GetDirectoryName(filePath);
 							var name = Path.GetFileName(filePath);
-							shaderCompiler.RequestCompile(shaderCode, shaderType, tagger.UpdateErrors, dir, name);
+							_shaderCompiler.RequestCompile(shaderCode, shaderType, tagger.UpdateErrors, dir, name);
 						}
 						catch (SystemException ex)
 						{
-							logger.Log(ex.Message);
+							_logger.Log(ex.Message);
 						}
 					}
 					else
@@ -67,24 +67,24 @@ namespace DMS.GLSL.Errors
 					}
 				}
 
-				observableSourceCode
-					.Throttle(TimeSpan.FromSeconds(settings.CompileDelay * 0.001f))
-					.Subscribe(sourceCode => RequestCompileShader(sourceCode));
+				observableSourceCode.Throttle(TimeSpan.FromSeconds(_settings.CompileDelay * 0.001f))
+									.Subscribe(sourceCode => RequestCompileShader(sourceCode));
 
 				return tagger;
 
 			}) as ITagger<T>;
 		}
 
-		private readonly ShaderCompiler shaderCompiler;
-		private readonly ICompilerSettings settings;
-		private readonly ILogger logger;
+		private readonly ShaderCompiler _shaderCompiler;
+		private readonly ICompilerSettings _settings;
+		private readonly ILogger _logger;
 
 		private static string GetFilePath(ITextBuffer textBuffer)
 		{
 			foreach (var prop in textBuffer.Properties.PropertyList)
 			{
-				if (!(prop.Value is ITextDocument doc)) continue;
+				if (!(prop.Value is ITextDocument doc))
+					continue;
 				return doc.FilePath;
 			}
 			return string.Empty;

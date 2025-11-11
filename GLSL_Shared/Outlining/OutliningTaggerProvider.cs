@@ -13,11 +13,14 @@ namespace DMS.GLSL.Outlining
 	[ContentType("glslShader")]
 	internal sealed class OutliningTaggerProvider : ITaggerProvider
 	{
+		private readonly IClassifierAggregatorService _classifierAggregatorService;
+		private readonly ILogger _logger;
+
 		[ImportingConstructor]
 		public OutliningTaggerProvider(IClassifierAggregatorService classifierAggregatorService, ILogger logger)
 		{
-			this.classifierAggregatorService = classifierAggregatorService ?? throw new ArgumentNullException(nameof(classifierAggregatorService));
-			this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_classifierAggregatorService = classifierAggregatorService ?? throw new ArgumentNullException(nameof(classifierAggregatorService));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
@@ -27,11 +30,8 @@ namespace DMS.GLSL.Outlining
 				throw new ArgumentNullException(nameof(buffer));
 			}
 			//create a single tagger for each buffer.
-			ITagger<T> sc() { return new OutliningTagger(buffer, classifierAggregatorService.GetClassifier(buffer), logger) as ITagger<T>; }
+			ITagger<T> sc() { return new OutliningTagger(buffer, _classifierAggregatorService.GetClassifier(buffer), _logger) as ITagger<T>; }
 			return buffer.Properties.GetOrCreateSingletonProperty(sc);
 		}
-
-		private readonly IClassifierAggregatorService classifierAggregatorService;
-		private readonly ILogger logger;
 	}
 }

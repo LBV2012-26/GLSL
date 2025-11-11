@@ -32,6 +32,8 @@ namespace DMS.GLSL.Options
 	public sealed class OptionsPagePackage : AsyncPackage
 	{
 		private const string PackageGuidString = "fd8ee466-e18c-45fc-b1a1-ca0dc1ec67fb";
+		private OptionPage _options;
+		private static readonly object _syncRoot = new object();
 
 		[Export(typeof(ICompilerSettings))]
 		[Export(typeof(IShaderFileExtensions))]
@@ -65,8 +67,5 @@ namespace DMS.GLSL.Options
 				return (OptionPage)myPack.GetDialogPage(typeof(OptionPage));
 			}
 		}
-
-		private OptionPage _options;
-		private static readonly object _syncRoot = new object();
 	}
 }
