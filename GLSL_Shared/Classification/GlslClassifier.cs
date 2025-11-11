@@ -11,6 +11,7 @@ namespace DMS.GLSL.Classification
 {
 	internal sealed class GlslClassifier : IClassifier
 	{
+		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 		internal GlslClassifier(ITextBuffer textBuffer, SyntaxColorParser parser, ILogger logger)
 		{
 			if (textBuffer is null)
@@ -67,8 +68,6 @@ namespace DMS.GLSL.Classification
 			//	UpdateSpans(new SnapshotSpan(textBuffer.CurrentSnapshot, 0, textBuffer.CurrentSnapshot.Length));
 			//};
 		}
-
-		public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
 		public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan inputSpan)
 		{
