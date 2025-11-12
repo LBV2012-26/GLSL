@@ -24,8 +24,14 @@ namespace DMS.GLSL.Classification
 		private IClassificationType UserKeyword2 { get; }
 		private IClassificationType BuiltInVariable { get; }
 		private IClassificationType UserVariable { get; }
+		private IClassificationType GlobalVariable { get; }
+		private IClassificationType FunctionParameter { get; }
+		private IClassificationType MemberVariable { get; }
 		private IClassificationType ControlKeyword { get; }
 		private IClassificationType UserDefinedType { get; }
+		private IClassificationType CompoundType { get; }
+		private IClassificationType Macro { get; }
+		private IClassificationType InactiveMacro { get; }
 
 		public SyntaxColorParser(IClassificationTypeRegistryService classificationTypeRegistry, IUserKeywords userKeywords)
 		{
@@ -52,8 +58,14 @@ namespace DMS.GLSL.Classification
 			UserKeyword2        = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.UserKeyword2);
 			BuiltInVariable     = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.BuiltInVariable);
 			UserVariable        = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.UserVariable);
+			GlobalVariable      = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.GlobalVariable);
+			FunctionParameter   = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.FunctionParameter);
+			MemberVariable      = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.MemberVariable);
 			ControlKeyword      = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.ControlKeyword);
 			UserDefinedType     = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.UserDefinedType);
+			CompoundType        = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.CompoundType);
+			Macro               = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.Macro);
+			InactiveMacro       = classificationTypeRegistry.GetClassificationType(GlslClassificationTypes.InactiveMacro);
 
 			_parser = new GlslParser();
 
@@ -98,19 +110,44 @@ namespace DMS.GLSL.Classification
 
 			switch (token.Type)
 			{
-			case TokenType.Comment:         return Comment;
-			case TokenType.Function:        return CheckUserDefined(token, Function);
-			case TokenType.Keyword:         return CheckUserDefined(token, Keyword);
-			case TokenType.ControlKeyword:  return CheckUserDefined(token, ControlKeyword);
-			case TokenType.UserDefinedType: return CheckUserDefined(token, UserDefinedType);
-			case TokenType.BuiltInVariable: return CheckUserDefined(token, BuiltInVariable);
-			case TokenType.UserVariable:    return CheckUserDefined(token, UserVariable);
-			case TokenType.Number:          return Number;
-			case TokenType.Operator:        return Operator;
-			case TokenType.Preprocessor:    return PreprocessorKeyword;
-			case TokenType.Identifier:      return CheckUserDefined(token, Identifier);
-			case TokenType.QuotedString:    return QuotedString;
-			default:                        return Identifier;
+			case TokenType.Comment:
+				return Comment;
+			case TokenType.Function:
+				return CheckUserDefined(token, Function);
+			case TokenType.Keyword:
+				return CheckUserDefined(token, Keyword);
+			case TokenType.ControlKeyword:
+				return CheckUserDefined(token, ControlKeyword);
+			case TokenType.UserDefinedType:
+				return CheckUserDefined(token, UserDefinedType);
+			case TokenType.CompoundType:
+				return CheckUserDefined(token, CompoundType);
+			case TokenType.BuiltInVariable:
+				return CheckUserDefined(token, BuiltInVariable);
+			case TokenType.UserVariable:
+				return CheckUserDefined(token, UserVariable);
+			case TokenType.GlobalVariable:
+				return CheckUserDefined(token, GlobalVariable);
+			case TokenType.FunctionParameter:
+				return CheckUserDefined(token, FunctionParameter);
+			case TokenType.MemberVariable:
+				return CheckUserDefined(token, MemberVariable);
+			case TokenType.Number:
+				return Number;
+			case TokenType.Operator:
+				return Operator;
+			case TokenType.Preprocessor:
+				return PreprocessorKeyword;
+			case TokenType.Identifier:
+				return CheckUserDefined(token, Identifier);
+			case TokenType.QuotedString:
+				return QuotedString;
+			case TokenType.Macro:
+				return Macro;
+			case TokenType.InactiveMacro:
+				return InactiveMacro;
+			default:
+				return Identifier;
 			}
 		}
 	}

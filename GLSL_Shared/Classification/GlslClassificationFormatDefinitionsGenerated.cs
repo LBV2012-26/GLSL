@@ -33,7 +33,7 @@ namespace DMS.GLSL.Classification
 		public GlslKeywordClassificationFormatDefinition()
 		{
 			DisplayName     = "GLSL Keyword"; //human readable version of the name
-			ForegroundColor = ColorTools.FromHexCode("#5fafff");
+			ForegroundColor = ColorTools.FromHexCode("#569cd6");
 		}
 	}
 
@@ -86,6 +86,54 @@ namespace DMS.GLSL.Classification
 	}
 
 	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.GlobalVariable)]
+	[Name(nameof(GlslGlobalVariableClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslGlobalVariableClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslGlobalVariableClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL GlobalVariable"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#c8c8c8");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.FunctionParameter)]
+	[Name(nameof(GlslFunctionParameterClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslFunctionParameterClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslFunctionParameterClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL FunctionParameter"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#9a9a9a");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.MemberVariable)]
+	[Name(nameof(GlslMemberVariableClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslMemberVariableClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslMemberVariableClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL MemberVariable"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#c8c8c8");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
 	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.UserDefinedType)]
 	[Name(nameof(GlslUserDefinedTypeClassificationFormatDefinition))]
 	// this should be visible to the end user
@@ -97,6 +145,22 @@ namespace DMS.GLSL.Classification
 		public GlslUserDefinedTypeClassificationFormatDefinition()
 		{
 			DisplayName     = "GLSL UserDefinedType"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#4ec9b0");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.CompoundType)]
+	[Name(nameof(GlslCompoundTypeClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslCompoundTypeClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslCompoundTypeClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL CompoundType"; //human readable version of the name
 			ForegroundColor = ColorTools.FromHexCode("#4ec9b0");
 		}
 	}
@@ -130,6 +194,38 @@ namespace DMS.GLSL.Classification
 		{
 			DisplayName     = "GLSL UserKeyword2"; //human readable version of the name
 			ForegroundColor = ColorTools.FromHexCode("#ff5faf");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.Macro)]
+	[Name(nameof(GlslMacroClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslMacroClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslMacroClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL Macro"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#beb7ff");
+		}
+	}
+
+	[Export(typeof(EditorFormatDefinition))]
+	[ClassificationType(ClassificationTypeNames = GlslClassificationTypes.InactiveMacro)]
+	[Name(nameof(GlslInactiveMacroClassificationFormatDefinition))]
+	// this should be visible to the end user
+	[UserVisible(true)]
+	// set the priority to be after the default classifiers
+	[Order(Before = Priority.Default)]
+	internal sealed class GlslInactiveMacroClassificationFormatDefinition : ClassificationFormatDefinition
+	{
+		public GlslInactiveMacroClassificationFormatDefinition()
+		{
+			DisplayName     = "GLSL InactiveMacro"; //human readable version of the name
+			ForegroundColor = ColorTools.FromHexCode("#ffffff");
 		}
 	}
 

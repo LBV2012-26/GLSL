@@ -1,12 +1,18 @@
 ﻿<#var classificationTypes = new Dictionary<string, string>()
 		{
-			["Function"]        = "#dcdcaa",
-			["Keyword"]         = "#5fafff",
-			["ControlKeyword"]  = "#d8a0df",
-			["BuiltInVariable"] = "#5fffff",
-			["UserVariable"]    = "#98dcfe",
-			["UserDefinedType"] = "#4ec9b0",
-			["UserKeyword1"]    = "#af5fff",
-			["UserKeyword2"]    = "#ff5faf",
+			["Function"]          = "#dcdcaa",
+			["Keyword"]           = "#569cd6",
+			["ControlKeyword"]    = "#d8a0df",
+			["BuiltInVariable"]   = "#5fffff",
+			["UserVariable"]      = "#98dcfe",
+			["GlobalVariable"]    = "#c8c8c8",
+			["FunctionParameter"] = "#9a9a9a",
+			["MemberVariable"]    = "#c8c8c8",
+			["UserDefinedType"]   = "#4ec9b0",
+			["CompoundType"]      = "#4ec9b0",
+			["UserKeyword1"]      = "#af5fff",
+			["UserKeyword2"]      = "#ff5faf",
+			["Macro"]             = "#beb7ff",
+			["InactiveMacro"]     = "#ffffff",
 		};
 #>
