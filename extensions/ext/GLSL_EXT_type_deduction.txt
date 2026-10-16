@@ -12,7 +12,7 @@ Contact
 
 Contributors
 
-    LBV 2012-26, independent
+    LBV 2012-26, Independent
 
 Status
 
@@ -479,50 +479,6 @@ Examples
 
         const int source = 1;
         auto mutableValue = 2, copy = source; // legal: both writable int
-
-Issues
-
-    (1) Should source qualifiers be inherited?
-
-    RESOLVED: No. Deduction determines the type. The new declaration supplies
-    its qualifiers and uses the ordinary defaults. Qualifiers belonging to
-    a member declaration or an extension type's definition remain part of
-    that definition.
-
-    (2) Should deduction be limited to a list of built-in value types?
-
-    RESOLVED: No. Any suitable expression type is considered, including
-    structures, arrays, and types introduced by other extensions. Existing
-    declaration and initialization restrictions decide whether it is usable.
-
-    (3) Should arrays lose their dimensions during deduction?
-
-    RESOLVED: No. The full array type is retained. No pointer conversion or
-    aliasing mechanism is introduced.
-
-    (4) Should a brace-enclosed list determine an array or vector type?
-
-    RESOLVED: No. A list has no single expression type and could initialize
-    several different composite types. An explicit constructor supplies a
-    type when deduction is desired.
-
-    (5) Should the keyword remain reserved when the extension is disabled?
-
-    RESOLVED: No. Disabling this extension preserves the existing handling
-    of the identifier "auto". Extension support is advertised separately by
-    the predefined macro.
-
-    (6) Should functions, parameters, or members use auto?
-
-    RESOLVED: No. This proposal provides type deduction for variable
-    declaration statements and global variable declarations.
-
-    (7) Should comma-separated variable declarators be supported?
-
-    RESOLVED: Yes. Reuse the existing variable declaration-list syntax.
-    Every declarator requires an initializer, and every initializer must
-    deduce the same type, excluding top-level qualifiers. Later initializers
-    can refer to earlier variables in the list under the existing scope rules.
 
 Revision History
 
